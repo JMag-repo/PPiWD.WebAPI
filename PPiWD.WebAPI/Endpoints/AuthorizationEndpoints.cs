@@ -1,5 +1,4 @@
 ﻿using System.Security.Authentication;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using PPiWD.WebAPI.Models.Authentication;
 using PPiWD.WebAPI.Services.Interfaces;

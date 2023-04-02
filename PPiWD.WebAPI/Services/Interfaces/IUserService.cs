@@ -1,5 +1,4 @@
-﻿using PPiWD.WebAPI.Models;
-using PPiWD.WebAPI.Models.Authentication;
+﻿using PPiWD.WebAPI.Models.Authentication;
 
 namespace PPiWD.WebAPI.Services.Interfaces;
 

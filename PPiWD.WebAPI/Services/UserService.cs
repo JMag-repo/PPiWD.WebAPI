@@ -4,12 +4,10 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using PPiWD.WebAPI.Database;
-using PPiWD.WebAPI.Models;
 using PPiWD.WebAPI.Models.Authentication;
 using PPiWD.WebAPI.Services.Interfaces;
 
 namespace PPiWD.WebAPI.Services;
-
 public class UserService : IUserService
 {
     private readonly DatabaseContext _context;
@@ -17,19 +15,15 @@ public class UserService : IUserService
 
     public UserService(DatabaseContext context, IConfiguration configuration)
     {
-        this._context = context;
-        this.configuration = configuration;
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+        this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
     public AuthorizedUser Authorize(AuthenticateUser model)
     {
-        var user = this.Authenticate(model.Username, model.Password);
+        var user = Authenticate(model.Username, model.Password) ?? throw new AuthenticationException("Username or password is incorrect");
+        var key = Encoding.ASCII.GetBytes(configuration.GetValue<string>("JwtSecret") ?? throw new ArgumentNullException("Authorization key cannot be null"));
 
-        if (user == null)
-            throw new AuthenticationException("Username or password is incorrect");
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(this.configuration.GetValue<string>("JwtSecret") ?? throw new ArgumentNullException("Authorization key cannot be null"));
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new Claim[]
@@ -39,6 +33,8 @@ public class UserService : IUserService
             Expires = DateTime.UtcNow.AddDays(7),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
+
+        var tokenHandler = new JwtSecurityTokenHandler();
         var token = tokenHandler.CreateToken(tokenDescriptor);
         var tokenString = tokenHandler.WriteToken(token);
 
@@ -47,7 +43,7 @@ public class UserService : IUserService
         {
             Id = user.Id,
             Username = user.Username,
-            Token = tokenString
+            Token = tokenString,
         };
     }
 
@@ -56,11 +52,11 @@ public class UserService : IUserService
         if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             return null;
 
-        var user = this._context.Users.SingleOrDefault(x => x.Username == username);
-        
+        var user = _context.Users.SingleOrDefault(x => x.Username == username);
+
         if (user == null)
             return null;
-        
+
         return !VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt) ? null : user;
     }
 
@@ -70,7 +66,7 @@ public class UserService : IUserService
         if (string.IsNullOrWhiteSpace(password))
             throw new AuthenticationException("PASSWORD_IS_REQUIRED");
 
-        if (this._context.Users.Any(x => x.Username == user.Username))
+        if (_context.Users.Any(x => x.Username == user.Username))
             throw new AuthenticationException("USERNAME_TAKEN");
 
         CreatePasswordHash(password, out var passwordHash, out var passwordSalt);
@@ -78,8 +74,8 @@ public class UserService : IUserService
         user.PasswordHash = passwordHash;
         user.PasswordSalt = passwordSalt;
 
-        this._context.Users.Add(user);
-        this._context.SaveChanges();
+        _context.Users.Add(user);
+        _context.SaveChanges();
 
         return user;
     }
@@ -89,9 +85,9 @@ public class UserService : IUserService
         var user = _context.Users.Find(userParam.Id);
 
         if (user == null)
-            throw new ArgumentNullException(nameof(user),"User not found");
+            throw new ArgumentNullException(nameof(user), "User not found");
 
-        
+
         if (!string.IsNullOrWhiteSpace(userParam.Username) && userParam.Username != user.Username)
         {
             if (_context.Users.Any(x => x.Username == userParam.Username))
@@ -99,7 +95,7 @@ public class UserService : IUserService
 
             user.Username = userParam.Username;
         }
-        
+
         // update password if provided
         if (!string.IsNullOrWhiteSpace(password))
         {
@@ -109,27 +105,27 @@ public class UserService : IUserService
             user.PasswordSalt = passwordSalt;
         }
 
-        this._context.Users.Update(user);
-        this._context.SaveChanges();
+        _context.Users.Update(user);
+        _context.SaveChanges();
     }
 
     public User GetById(int id)
     {
-        return this._context.Users.Find(id);
+        return _context.Users.Find(id);
     }
 
     public void Delete(int id)
     {
-        var user = this._context.Users.Find(id);
+        var user = _context.Users.Find(id);
         if (user == null)
         {
             return;
         }
 
-        this._context.Users.Remove(user);
-        this._context.SaveChanges();
+        _context.Users.Remove(user);
+        _context.SaveChanges();
     }
-    
+
     private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
     {
         if (password == null) throw new ArgumentNullException("password");

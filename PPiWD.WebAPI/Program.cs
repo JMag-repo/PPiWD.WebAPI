@@ -1,10 +1,11 @@
-using PPiWD.WebAPI.Extensions;
+using Microsoft.EntityFrameworkCore;
+using PPiWD.WebAPI.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 // Services
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddDbContext<DatabaseContext>(options => options.UseInMemoryDatabase("items")); //TODO: remove this line and Uninstall-Package Microsoft.EntityFrameworkCore.InMemory
 builder.Services.AddSwaggerGen();
 
 //builder.Services.AddAppServices();
