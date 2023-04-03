@@ -6,19 +6,25 @@ namespace PPiWD.WebAPI.Services;
 public class MeasurementService : IMeasurementService
 {
     private readonly DatabaseContext _context;
+    private readonly ILogger<MeasurementService> _logger;
 
-    public MeasurementService(DatabaseContext context)
+    public MeasurementService(DatabaseContext context, ILogger<MeasurementService> logger)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public Guid Create(Measurement measurement)
     {
+        measurement.Id = Guid.NewGuid();
         _context.Measurements.Add(measurement);
         foreach (var data in measurement.SensorDatas)
         {
             _context.SensorDatas.Add(data);
         }
+        _context.SaveChanges();
+
+        _logger.LogWarning("Added new measurement. [Id]: {measurement.Id}", measurement.Id);
 
         return measurement.Id;
     }
@@ -34,6 +40,9 @@ public class MeasurementService : IMeasurementService
 
     public Measurement? GetById(Guid id)
     {
+        var foundMeasurement = _context.Measurements.Find(id);
+        _ = foundMeasurement ?? throw new ArgumentNullException(nameof(foundMeasurement), "Measurement not found");
+
         return _context.Measurements.Find(id);
     }
 
