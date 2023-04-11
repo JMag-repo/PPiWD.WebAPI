@@ -16,12 +16,12 @@ namespace PPiWD.WebAPI.Models.Measurements
         public string Sensor { get; set; }
 
         [Required]
-        public double XAxis { get; set; } = 0;
+        public float XAxis { get; set; } = 0;
 
         [Required]
-        public double YAxis { get; set; } = 0;
+        public float YAxis { get; set; } = 0;
 
         [Required]
-        public double ZAxis { get; set; } = 0;
+        public float ZAxis { get; set; } = 0;
     }
 }
