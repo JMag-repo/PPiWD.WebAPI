@@ -35,5 +35,5 @@ app.UseHttpsRedirection();
 //app.UseAuthorization();
 
 // Endpoints
-app.MapMeasurementsEnpoints();
+app.MapMeasurementsEndpoints();
 app.Run();

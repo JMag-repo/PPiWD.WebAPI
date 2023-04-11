@@ -7,7 +7,7 @@ namespace PPiWD.WebAPI.Endpoints;
 
 public static class MeasurementsEndpoint
 {
-    public static void MapMeasurementsEnpoints(this WebApplication app)
+    public static void MapMeasurementsEndpoints(this WebApplication app)
     {
         app.MapPost("/Measurements/", ([FromBody] Measurement measurement, [FromServices] IMeasurementService measurementService) =>
         {
