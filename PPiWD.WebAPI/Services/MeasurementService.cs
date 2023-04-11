@@ -1,4 +1,5 @@
-﻿using PPiWD.WebAPI.Database;
+﻿using Microsoft.EntityFrameworkCore;
+using PPiWD.WebAPI.Database;
 using PPiWD.WebAPI.Models.Measurements;
 using PPiWD.WebAPI.Services.Interfaces;
 
@@ -18,14 +19,9 @@ public class MeasurementService : IMeasurementService
     {
         measurement.Id = Guid.NewGuid();
         _context.Measurements.Add(measurement);
-        foreach (var data in measurement.SensorDatas)
-        {
-            _context.SensorDatas.Add(data);
-        }
         _context.SaveChanges();
 
         _logger.LogWarning("Added new measurement. [Id]: {measurement.Id}", measurement.Id);
-
         return measurement.Id;
     }
 
@@ -40,10 +36,10 @@ public class MeasurementService : IMeasurementService
 
     public Measurement? GetById(Guid id)
     {
-        var foundMeasurement = _context.Measurements.Find(id);
+        var foundMeasurement = _context.Measurements.Where(x => x.Id == id).Include(x => x.SensorDatas).FirstOrDefault();
         _ = foundMeasurement ?? throw new ArgumentNullException(nameof(foundMeasurement), "Measurement not found");
 
-        return _context.Measurements.Find(id);
+        return foundMeasurement;
     }
 
     public Guid Update(Measurement measurement)

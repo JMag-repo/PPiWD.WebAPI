@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace PPiWD.WebAPI.Models.Measurements
 {
@@ -8,6 +9,7 @@ namespace PPiWD.WebAPI.Models.Measurements
         public Guid Id { get; set; }
 
         [Required]
+        [JsonIgnore]
         public Measurement Measurement { get; set; }
 
         [Required]
