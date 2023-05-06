@@ -49,12 +49,6 @@ public class MeasurementService : IMeasurementService
         _ = foundMeasurement ?? throw new ArgumentNullException(nameof(foundMeasurement), "Measurement not found");
 
         _context.Measurements.Update(measurement);
-        ////_context.SensorDatas.RemoveRange(foundMeasurement.SensorDatas);
-
-        ////foreach (var data in measurement.SensorDatas)
-        ////{
-        ////    _context.SensorDatas.Add(data);
-        ////}
 
         _context.SaveChanges();
         return measurement.Id;
