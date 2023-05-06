@@ -44,16 +44,17 @@ public class MeasurementService : IMeasurementService
 
     public Guid Update(Measurement measurement)
     {
-        var foundMeasurement = _context.Measurements.Find(measurement.Id);
+        var foundMeasurement = _context.Measurements.AsNoTracking().Where(x => x.Id.Equals(measurement.Id)).Include("SensorDatas").FirstOrDefault();
 
         _ = foundMeasurement ?? throw new ArgumentNullException(nameof(foundMeasurement), "Measurement not found");
 
-        _context.SensorDatas.RemoveRange(foundMeasurement.SensorDatas);
         _context.Measurements.Update(measurement);
-        foreach (var data in measurement.SensorDatas)
-        {
-            _context.SensorDatas.Add(data);
-        }
+        ////_context.SensorDatas.RemoveRange(foundMeasurement.SensorDatas);
+
+        ////foreach (var data in measurement.SensorDatas)
+        ////{
+        ////    _context.SensorDatas.Add(data);
+        ////}
 
         _context.SaveChanges();
         return measurement.Id;
