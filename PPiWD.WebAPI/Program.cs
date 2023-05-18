@@ -1,11 +1,19 @@
+using Microsoft.EntityFrameworkCore;
+using PPiWD.WebAPI.Database;
+using PPiWD.WebAPI.Endpoints;
 using PPiWD.WebAPI.Extensions;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 
 // Services
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+builder.Services.AddDbContext<DatabaseContext>(options => options.UseInMemoryDatabase("items")); //TODO: remove this line and Uninstall-Package Microsoft.EntityFrameworkCore.InMemory
 builder.Services.AddSwaggerGen();
+builder.Services.AddAppServices();
 
 //builder.Services.AddAppServices();
 
@@ -28,5 +36,5 @@ app.UseHttpsRedirection();
 //app.UseAuthorization();
 
 // Endpoints
-
+app.MapMeasurementsEndpoints();
 app.Run();
