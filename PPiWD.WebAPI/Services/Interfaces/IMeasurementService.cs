@@ -4,11 +4,11 @@ namespace PPiWD.WebAPI.Services.Interfaces;
 
 public interface IMeasurementService
 {
-    Guid Create(Measurement measurement);
+    int Create(Measurement measurement);
 
-    Guid Update(Measurement measurement);
+    int Update(Measurement measurement);
 
-    Measurement? GetById(Guid id);
+    Measurement? GetById(int id);
 
-    void Delete(Guid id);
+    void Delete(int id);
 }

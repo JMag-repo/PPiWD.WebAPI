@@ -17,5 +17,14 @@ public class DatabaseContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Measurement>()
+            .HasOne<User>(s => s.User)
+            .WithMany(s => s.Measurements)
+            .HasForeignKey(x => x.UserId);
+
+        modelBuilder.Entity<Measurement>()
+            .HasMany<SensorData>(x => x.SensorDatas)
+            .WithOne(x => x.Measurement)
+            .HasForeignKey(x => x.MeasurementId);
     }
 }

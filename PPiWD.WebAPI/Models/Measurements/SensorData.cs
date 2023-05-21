@@ -10,10 +10,12 @@ namespace PPiWD.WebAPI.Models.Measurements
 
         [Required]
         [JsonIgnore]
-        public Measurement Measurement { get; set; }
+        public virtual Measurement Measurement { get; set; }
 
         [Required]
         public string Sensor { get; set; }
+
+        public int MeasurementId { get; set; }
 
         [Required]
         public float XAxis { get; set; } = 0;

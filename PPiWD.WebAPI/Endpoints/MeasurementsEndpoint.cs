@@ -1,5 +1,8 @@
 ﻿using System.Security.Authentication;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PPiWD.WebAPI.Database;
 using PPiWD.WebAPI.Models.Measurements;
 using PPiWD.WebAPI.Services.Interfaces;
 
@@ -9,10 +12,19 @@ public static class MeasurementsEndpoint
 {
     public static void MapMeasurementsEndpoints(this WebApplication app)
     {
-        app.MapPost("/Measurements/", ([FromBody] Measurement measurement, [FromServices] IMeasurementService measurementService) =>
+        app.MapPost("/Measurements/", ([FromBody] Measurement measurement, [FromServices] IMeasurementService measurementService, ClaimsPrincipal claimsPrincipal, [FromServices] DatabaseContext context) =>
         {
             try
             {
+                var userId = claimsPrincipal.FindFirst(ClaimTypes.Name).Value;
+                var user = context.Users.FirstOrDefault(x => x.Id == int.Parse(userId));
+
+                if (user == null)
+                {
+                    throw new Exception("Internal error");
+                }
+
+                measurement.User = user;
                 var responseObject = measurementService.Create(measurement);
                 return Results.Ok(responseObject);
             }
@@ -20,9 +32,11 @@ public static class MeasurementsEndpoint
             {
                 return Results.BadRequest(new { message = e.Message });
             }
-        }).WithName("PostMeasurements");
+        })
+            .WithName("PostMeasurements")
+            .RequireAuthorization();
 
-        app.MapGet("/Measurements/{id:Guid}", (Guid id, [FromServices] IMeasurementService measurementService) =>
+        app.MapGet("/Measurements/{id:int}", (int id, [FromServices] IMeasurementService measurementService) =>
         {
             try
             {
@@ -37,9 +51,9 @@ public static class MeasurementsEndpoint
             {
                 return Results.NotFound(new { message = e.Message });
             }
-        });
+        }).RequireAuthorization();;
 
-        app.MapDelete("/Measurements/{id:Guid}", (Guid id, [FromServices] IMeasurementService measurementService) =>
+        app.MapDelete("/Measurements/{id:Guid}", (int id, [FromServices] IMeasurementService measurementService) =>
         {
             try
             {
@@ -54,7 +68,7 @@ public static class MeasurementsEndpoint
             {
                 return Results.NotFound(new { message = e.Message });
             }
-        });
+        }).RequireAuthorization();;
 
         app.MapPut("/Measurements/", ([FromBody] Measurement measurement, [FromServices] IMeasurementService measurementService) =>
         {
@@ -71,7 +85,7 @@ public static class MeasurementsEndpoint
             {
                 return Results.NotFound(new { message = e.Message });
             }
-        });
+        }).RequireAuthorization();;
 
         app.MapControllers();
     }

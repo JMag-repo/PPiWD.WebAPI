@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using PPiWD.WebAPI.Models.Measurements;
 
 namespace PPiWD.WebAPI.Models.Authentication;
 
@@ -12,4 +13,6 @@ public class User
     public byte[] PasswordHash { get; set; }
 
     public byte[] PasswordSalt { get; set; }
+    
+    public virtual ICollection<Measurement> Measurements { get; set; } = new List<Measurement>();
 }

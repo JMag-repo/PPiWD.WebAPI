@@ -7,16 +7,18 @@ namespace PPiWD.WebAPI.Models.Measurements
     public class Measurement
     {
         [Key]
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
-        public User User { get; set; }
+        public virtual User User { get; set; }
 
         [Required]
         public string Date { get; set; }
 
         [Required]
         public int Duration { get; set; }
+        
+        public int UserId { get; set; }
 
-        public ICollection<SensorData> SensorDatas { get; set; }
+        public virtual ICollection<SensorData> SensorDatas { get; set; }
     }
 }

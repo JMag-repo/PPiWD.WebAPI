@@ -15,9 +15,8 @@ public class MeasurementService : IMeasurementService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public Guid Create(Measurement measurement)
+    public int Create(Measurement measurement)
     {
-        measurement.Id = Guid.NewGuid();
         _context.Measurements.Add(measurement);
         _context.SaveChanges();
 
@@ -25,7 +24,7 @@ public class MeasurementService : IMeasurementService
         return measurement.Id;
     }
 
-    public void Delete(Guid id)
+    public void Delete(int id)
     {
         var foundMeasurement = _context.Measurements.Find(id);
         _ = foundMeasurement ?? throw new ArgumentNullException(nameof(foundMeasurement), "Measurement not found");
@@ -34,7 +33,7 @@ public class MeasurementService : IMeasurementService
         _context.SaveChanges();
     }
 
-    public Measurement? GetById(Guid id)
+    public Measurement? GetById(int id)
     {
         var foundMeasurement = _context.Measurements.Where(x => x.Id == id).Include(x => x.SensorDatas).FirstOrDefault();
         _ = foundMeasurement ?? throw new ArgumentNullException(nameof(foundMeasurement), "Measurement not found");
@@ -42,7 +41,7 @@ public class MeasurementService : IMeasurementService
         return foundMeasurement;
     }
 
-    public Guid Update(Measurement measurement)
+    public int Update(Measurement measurement)
     {
         var foundMeasurement = _context.Measurements.AsNoTracking().Where(x => x.Id.Equals(measurement.Id)).Include("SensorDatas").FirstOrDefault();
 
