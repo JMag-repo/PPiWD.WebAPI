@@ -51,7 +51,22 @@ public static class MeasurementsEndpoint
             {
                 return Results.NotFound(new { message = e.Message });
             }
-        }).RequireAuthorization();;
+        }).RequireAuthorization();
+
+        app.MapGet("/Measurements", (DatabaseContext context, ClaimsPrincipal claimsPrincipal) =>
+        {
+            var userId = claimsPrincipal.FindFirst(ClaimTypes.Name).Value;
+            var user = context.Users.FirstOrDefault(x => x.Id == int.Parse(userId));
+
+            if (user == null)
+            {
+                return Results.BadRequest("Could not resolve user");
+            }
+
+            var measurements = context.Measurements.Where(x => x.UserId == user.Id).ToList();
+
+            return Results.Ok(measurements);
+        }).RequireAuthorization();
 
         app.MapDelete("/Measurements/{id:Guid}", (int id, [FromServices] IMeasurementService measurementService) =>
         {

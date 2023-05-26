@@ -9,6 +9,7 @@ namespace PPiWD.WebAPI.Models.Measurements
         [Key]
         public int Id { get; set; }
 
+        [JsonIgnore]
         public virtual User User { get; set; }
 
         [Required]
