@@ -8,7 +8,6 @@ public class MLModel
 {
     public MLModel()
     {
-        Runtime.PythonDLL = @"C:\Python310\python310.dll";
         PythonEngine.Initialize();
     }
 
@@ -18,7 +17,7 @@ public class MLModel
 
         var code = this.PyCode;
         var data = this.ReplaceFirst(code, "data_mock", this.BuildFromMeasurement(measurement));
-
+        
         using (Py.GIL())
         {
             using (var scope = Py.CreateScope())

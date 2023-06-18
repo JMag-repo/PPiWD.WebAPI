@@ -4,6 +4,7 @@ using PPiWD.WebAPI.Endpoints;
 using PPiWD.WebAPI.Extensions;
 using System.Text.Json.Serialization;
 using PPiWD.WebAPI.MachineLearning;
+using Python.Runtime;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
@@ -17,7 +18,8 @@ builder.Services.AddDbContext<DatabaseContext>(options => options.UseInMemoryDat
 builder.Services.AddSwaggerGen();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddAppServices();
-builder.Services.AddSingleton<MLModel>();
+Runtime.PythonDLL = @"C:\Python310\python310.dll";
+builder.Services.AddTransient<MLModel>();
 
 //builder.Services.AddAppServices();
 

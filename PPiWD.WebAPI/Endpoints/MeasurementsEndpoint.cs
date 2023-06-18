@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Net.Mime;
 using System.Security.Authentication;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
@@ -7,6 +8,7 @@ using PPiWD.WebAPI.Database;
 using PPiWD.WebAPI.MachineLearning;
 using PPiWD.WebAPI.Models.Measurements;
 using PPiWD.WebAPI.Services.Interfaces;
+using Python.Runtime;
 
 namespace PPiWD.WebAPI.Endpoints;
 
@@ -17,7 +19,7 @@ public static class MeasurementsEndpoint
         app.MapPost("/Measurements/",
                 ([FromBody] Measurement measurement, [FromServices] IMeasurementService measurementService,
                     ClaimsPrincipal claimsPrincipal, [FromServices] DatabaseContext context,
-                    [FromServices] MLModel model) =>
+                    [FromServices] MLModel model,[FromServices] IHostApplicationLifetime appLifetime) =>
                 {
                     try
                     {
@@ -31,13 +33,26 @@ public static class MeasurementsEndpoint
 
                         measurement.User = user;
                         var responseObject = measurementService.Create(measurement);
-                        var jumpCount = model.Calculate(measurement);
+                        int jumpCount = 0;
+                        try
+                        {
+                            jumpCount = model.Calculate(measurement);
+                        }
+                        catch (PythonException e)
+                        {
+                            Console.WriteLine(e);
+                            appLifetime.StopApplication();
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
                         return Results.Ok(new
                         {
                             id = measurement.Id,
                             Date = measurement.Date,
                             Duration = measurement.Duration,
-                            //userId = userId,
+                            userId = userId,
                             sensorDatas = measurement.SensorDatas,
                             jumpCount = jumpCount
                         });
@@ -47,8 +62,8 @@ public static class MeasurementsEndpoint
                         return Results.BadRequest(new {message = e.Message});
                     }
                 })
-            .WithName("PostMeasurements");
-            //.RequireAuthorization();
+            .WithName("PostMeasurements")
+            .RequireAuthorization();
 
         app.MapGet("/Measurements/{id:int}", (int id, [FromServices] IMeasurementService measurementService) =>
         {
