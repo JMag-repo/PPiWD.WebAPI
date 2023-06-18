@@ -3,6 +3,7 @@ using PPiWD.WebAPI.Database;
 using PPiWD.WebAPI.Endpoints;
 using PPiWD.WebAPI.Extensions;
 using System.Text.Json.Serialization;
+using PPiWD.WebAPI.MachineLearning;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
@@ -16,6 +17,7 @@ builder.Services.AddDbContext<DatabaseContext>(options => options.UseInMemoryDat
 builder.Services.AddSwaggerGen();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddAppServices();
+builder.Services.AddSingleton<MLModel>();
 
 //builder.Services.AddAppServices();
 

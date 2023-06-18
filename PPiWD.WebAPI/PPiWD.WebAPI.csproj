@@ -20,8 +20,11 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.4" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="7.0.4" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.4" />
+        <PackageReference Include="Microsoft.ML" Version="3.0.0-preview.23266.6" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.3" />
+        <PackageReference Include="pythonnet" Version="3.0.1" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+        <PackageReference Include="Syncfusion.PMML.AspNet" Version="21.2.10" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,8 +1,10 @@
-﻿using System.Security.Authentication;
+﻿using System.Globalization;
+using System.Security.Authentication;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PPiWD.WebAPI.Database;
+using PPiWD.WebAPI.MachineLearning;
 using PPiWD.WebAPI.Models.Measurements;
 using PPiWD.WebAPI.Services.Interfaces;
 
@@ -12,29 +14,41 @@ public static class MeasurementsEndpoint
 {
     public static void MapMeasurementsEndpoints(this WebApplication app)
     {
-        app.MapPost("/Measurements/", ([FromBody] Measurement measurement, [FromServices] IMeasurementService measurementService, ClaimsPrincipal claimsPrincipal, [FromServices] DatabaseContext context) =>
-        {
-            try
-            {
-                var userId = claimsPrincipal.FindFirst(ClaimTypes.Name).Value;
-                var user = context.Users.FirstOrDefault(x => x.Id == int.Parse(userId));
-
-                if (user == null)
+        app.MapPost("/Measurements/",
+                ([FromBody] Measurement measurement, [FromServices] IMeasurementService measurementService,
+                    ClaimsPrincipal claimsPrincipal, [FromServices] DatabaseContext context,
+                    [FromServices] MLModel model) =>
                 {
-                    throw new Exception("Internal error");
-                }
+                    try
+                    {
+                        var userId = claimsPrincipal.FindFirst(ClaimTypes.Name).Value;
+                        var user = context.Users.FirstOrDefault(x => x.Id == int.Parse(userId));
 
-                measurement.User = user;
-                var responseObject = measurementService.Create(measurement);
-                return Results.Ok(responseObject);
-            }
-            catch (AuthenticationException e)
-            {
-                return Results.BadRequest(new { message = e.Message });
-            }
-        })
-            .WithName("PostMeasurements")
-            .RequireAuthorization();
+                        if (user == null)
+                        {
+                            throw new Exception("Internal error");
+                        }
+
+                        measurement.User = user;
+                        var responseObject = measurementService.Create(measurement);
+                        var jumpCount = model.Calculate(measurement);
+                        return Results.Ok(new
+                        {
+                            id = measurement.Id,
+                            Date = measurement.Date,
+                            Duration = measurement.Duration,
+                            //userId = userId,
+                            sensorDatas = measurement.SensorDatas,
+                            jumpCount = jumpCount
+                        });
+                    }
+                    catch (AuthenticationException e)
+                    {
+                        return Results.BadRequest(new {message = e.Message});
+                    }
+                })
+            .WithName("PostMeasurements");
+            //.RequireAuthorization();
 
         app.MapGet("/Measurements/{id:int}", (int id, [FromServices] IMeasurementService measurementService) =>
         {
@@ -45,11 +59,11 @@ public static class MeasurementsEndpoint
             }
             catch (AuthenticationException e)
             {
-                return Results.BadRequest(new { message = e.Message });
+                return Results.BadRequest(new {message = e.Message});
             }
             catch (ArgumentNullException e)
             {
-                return Results.NotFound(new { message = e.Message });
+                return Results.NotFound(new {message = e.Message});
             }
         }).RequireAuthorization();
 
@@ -77,30 +91,65 @@ public static class MeasurementsEndpoint
             }
             catch (AuthenticationException e)
             {
-                return Results.BadRequest(new { message = e.Message });
+                return Results.BadRequest(new {message = e.Message});
             }
             catch (ArgumentNullException e)
             {
-                return Results.NotFound(new { message = e.Message });
+                return Results.NotFound(new {message = e.Message});
             }
-        }).RequireAuthorization();;
+        }).RequireAuthorization();
+        ;
 
-        app.MapPut("/Measurements/", ([FromBody] Measurement measurement, [FromServices] IMeasurementService measurementService) =>
+        app.MapPut("/Measurements/",
+            ([FromBody] Measurement measurement, [FromServices] IMeasurementService measurementService) =>
+            {
+                try
+                {
+                    var responseObject = measurementService.Update(measurement);
+                    return Results.Ok(responseObject);
+                }
+                catch (AuthenticationException e)
+                {
+                    return Results.BadRequest(new {message = e.Message});
+                }
+                catch (ArgumentNullException e)
+                {
+                    return Results.NotFound(new {message = e.Message});
+                }
+            }).RequireAuthorization();
+
+        app.MapGet("/Calculate", ([FromServices] MLModel mlModel) =>
         {
-            try
+            string path = Environment.CurrentDirectory;
+            string dataPath = Path.Combine(path, "data.csv");
+            List<SensorData> sensorDataList = new List<SensorData>();
+
+            using (StreamReader reader = new StreamReader(dataPath))
             {
-                var responseObject = measurementService.Update(measurement);
-                return Results.Ok(responseObject);
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    string[] cells = line.Split(';');
+
+                    if (cells.Length >= 3) // Ensure at least 3 values are present
+                    {
+                        SensorData sensorData = new SensorData
+                        {
+                            XAxis = float.Parse(cells[1], NumberStyles.Float, CultureInfo.InvariantCulture),
+                            YAxis = float.Parse(cells[2],NumberStyles.Float, CultureInfo.InvariantCulture),
+                            ZAxis = float.Parse(cells[3],NumberStyles.Float, CultureInfo.InvariantCulture)
+                        };
+
+                        sensorDataList.Add(sensorData);
+                    }
+                }
+
+                return Results.Ok(mlModel.Calculate(new Measurement()
+                {
+                    SensorDatas = sensorDataList
+                }));
             }
-            catch (AuthenticationException e)
-            {
-                return Results.BadRequest(new { message = e.Message });
-            }
-            catch (ArgumentNullException e)
-            {
-                return Results.NotFound(new { message = e.Message });
-            }
-        }).RequireAuthorization();;
+        });
 
         app.MapControllers();
     }
